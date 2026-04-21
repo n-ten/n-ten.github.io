@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Portal Manager</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://xurel.github.io/js/faker.min.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
+            --border: #cbd5e1; /* Dipertegas */
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+
+        body { background: var(--bg); color: var(--text-dark); padding-top: 80px; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; }
+
+        /* NAVBAR */
+        .navbar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px);
+            border-bottom: 1px solid var(--border); display: flex; justify-content: flex-end; align-items: center; padding: 0 20px; z-index: 100;
+        }
+        .nav-icon { background: none; border: none; font-size: 22px; color: var(--text-gray); cursor: pointer; transition: color 0.2s; }
+        .nav-icon:hover { color: var(--primary); }
+
+        /* CONTAINER */
+        .container { width: 100%; max-width: 500px; padding: 0 15px; }
+
+        /* GENERATOR BAR */
+        .generator-bar { display: flex; gap: 10px; height: 50px; margin-bottom: 25px; }
+        .gen-input { 
+            flex: 1; height: 100%; border: 2px solid var(--border); border-radius: 10px; padding: 0 15px; 
+            font-size: 0.9em; font-weight: 500; background: var(--card-bg); outline: none; transition: border-color 0.2s;
+        }
+        .gen-input:focus { border-color: var(--primary); }
+        .gen-btn { 
+            height: 100%; padding: 0 20px; background: var(--primary); color: white; border: none; border-radius: 10px;
+            font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; flex-shrink: 0;
+        }
+        .gen-btn:hover { background: var(--primary-hover); }
+        .gen-btn.success { background: var(--success); }
+
+        /* CARD LIST */
+        .card-list { display: flex; flex-direction: column; gap: 14px; }
+        .link-card {
+            display: flex; background: var(--card-bg); border-radius: 12px; overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: transform 0.2s;
+        }
+        .link-card:hover { transform: translateY(-2px); }
+
+        /* Copy Button (Kiri Penuh) */
+        .copy-zone {
+            width: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; 
+            font-size: 20px; transition: all 0.2s; flex-shrink: 0; align-self: stretch; border: none; outline: none;
+        }
+        
+        /* Konten Kanan */
+        .content-zone { flex: 1; padding: 14px; display: flex; justify-content: space-between; align-items: center; overflow: hidden; cursor: pointer;}
+        .text-info { display: flex; flex-direction: column; overflow: hidden; }
+        .card-title { font-weight: 700; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: UPPERCASE; letter-spacing: 0.5px;}
+        .card-subtitle { font-size: 0.75em; color: var(--text-gray); margin-top: 6px; display: flex; gap: 8px; align-items: center; }
+        
+        .badge { padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.85em; }
+        .badge-price { background: #e0e7ff; color: var(--primary); }
+        .badge-status { background: #fef3c7; color: #b45309; }
+
+        /* Admin Buttons */
+        .admin-actions { display: none; gap: 6px; margin-left: 10px; }
+        .btn-act { width: 34px; height: 34px; border-radius: 8px; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 13px; transition: 0.2s; }
+        .btn-pin { background: #f1f5f9; color: var(--text-gray); }
+        .btn-pin.active { background: #fffbeb; color: var(--warning); }
+        .btn-edit { background: #f1f5f9; color: var(--text-gray); }
+        .btn-edit:hover { background: #e2e8f0; color: var(--primary); }
+        .btn-del { background: #fef2f2; color: var(--danger); }
+        .btn-del:hover { background: #fee2e2; }
+
+        /* FLOATING BUTTON */
+        .fab {
+            position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; background: var(--text-dark); color: white;
+            border-radius: 50%; border: none; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer; display: none; justify-content: center; align-items: center; transition: transform 0.2s; z-index: 99;
+        }
+        .fab:hover { transform: scale(1.08); background: var(--primary); }
+
+        /* MODALS FORM */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; opacity: 0; transition: opacity 0.3s; }
+        .modal.active { display: flex; opacity: 1; }
+        .modal-box { background: white; width: 100%; max-width: 380px; border-radius: 16px; padding: 24px; box-shadow: 0 15px 30px rgba(0,0,0,0.15); transform: translateY(20px); transition: transform 0.3s; }
+        .modal.active .modal-box { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-weight: 800; font-size: 1.1em; color: var(--text-dark);}
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.85em; font-weight: 600; color: var(--text-gray); margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; outline: none; font-family: inherit; font-size: 0.95em; transition: border-color 0.2s;}
+        .form-input:focus { border-color: var(--primary); }
+        
+        .check-wrap { display: flex; align-items: center; gap: 8px; font-size: 0.85em; font-weight: 600; color: var(--text-gray); cursor: pointer; margin-bottom: 20px; }
+        .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1em; transition: background 0.2s;}
+        .btn-submit:hover { background: var(--primary-hover); }
+
+        /* CUSTOM ALERT */
+        .alert-icon { font-size: 45px; margin-bottom: 15px; }
+        .alert-text { color: var(--text-gray); font-size: 0.9em; margin-bottom: 25px; line-height: 1.5; }
+        .alert-btns { display: flex; gap: 10px; justify-content: center; }
+        .btn-alert { flex: 1; padding: 12px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; }
+        .btn-cancel { background: #f1f5f9; color: var(--text-dark); }
+        .btn-confirm { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+    </style>
+</head>
+<body>
+
+    <script>
+        const CONFIG = {
+            // 1. Kredensial Firebase
+            FIREBASE: {
+                apiKey: "AIzaSyC7KMPorNrZ4FzsYmQA1pMQh-X6f3YFPuI",
+                authDomain: "jeff-link.firebaseapp.com",
+                databaseURL: "https://jeff-link-default-rtdb.asia-southeast1.firebasedatabase.app",
+                projectId: "jeff-link",
+                storageBucket: "jeff-link.firebasestorage.app"
+            },
+            // 2. URL Database Wilayah (Cloudflare R2)
+            JSON_URL: "https://pub-30b067d7ebb849a48ef3290ccbf39b65.r2.dev/kota.json",
+            
+            // 3. Data Generator Acak
+            HP_PREFIX: ['0811','0812','0813','0821','0822','0852','0815','0816','0857','0858','0817','0818','0819','0859','0877','0878','0895','0896','0897','0898'],
+            BIG_CITIES: ["JAKARTA", "SURABAYA", "BANDUNG", "MEDAN", "SEMARANG", "MAKASSAR", "PALEMBANG", "DENPASAR", "BOGOR", "DEPOK", "TANGERANG", "BEKASI", "SIDOARJO", "MALANG", "SURAKARTA", "YOGYAKARTA"],
+            HEROES: ["Soekarno", "Hatta", "Sudirman", "Diponegoro", "Pattimura", "Imam Bonjol", "Teuku Umar", "Cut Nyak Dien", "Kartini", "Ki Hajar Dewantara", "Ahmad Yani", "Bung Tomo", "Sisingamangaraja", "Hasanuddin", "Antasari", "Agus Salim", "Hayam Wuruk", "Gajah Mada", "Raden Fatah", "Mulawarman", "Purnawarman", "Hasyim Asyari", "Wahid Hasyim", "Ahmad Dahlan", "Samanhudi", "Nuku", "Sultan Ageng Tirtayasa", "Sultan Syahrir", "Tan Malaka", "Mohammad Natsir", "Tjokroaminoto", "Sam Ratulangi", "Soetomo", "Cipto Mangunkusumo", "Dewi Sartika", "Nyi Ageng Serang", "Rasuna Said", "Fatmawati", "Yos Sudarso", "R.E. Martadinata", "Suprapto", "M.T. Haryono", "S. Parman", "D.I. Panjaitan", "Sutoyo Siswomiharjo", "Pierre Tendean", "Katamso", "Halim Perdanakusuma", "Iswahyudi", "Abdul Muis", "Ir. Juanda", "Slamet Riyadi", "Urip Sumohardjo", "Teuku Cik Ditiro", "Mahmud Badaruddin", "Raden Intan", "Sultan Thaha", "Iskandar Muda", "Teuku Nyak Arif", "Frans Kaisiepo", "Silas Papare", "Marthen Indey", "Johannes Dimara", "Opo Daeng Risaju", "Maria Walanda Maramis", "W.R. Supratman", "Ismail Marzuki", "Chairil Anwar", "Raden Saleh", "Affandi", "Zainal Mustofa", "Mas Mansyur", "Tirtayasa", "Nuruddin Ar-Raniry", "Hamzah Fansuri", "Syaikh Abdurrauf", "Syaikh Yusuf", "Syaikh Nawawi", "Ranggawarsita", "Suriyadi", "Dirgantara", "Soepeno", "Sutomo", "Suharto", "Gatot Subroto", "Veteran", "Pemuda", "Perintis Kemerdekaan", "Bahari", "Angkasa", "Bumi", "Nusantara"]
+        };
+
+        // Inisialisasi Firebase
+        firebase.initializeApp(CONFIG.FIREBASE);
+        const db = firebase.database();
+        const auth = firebase.auth();
+    </script>
+
+    <nav class="navbar">
+        <button class="nav-icon" id="btn-login-trigger" onclick="openModal('modal-login')"><i class="fa-solid fa-user"></i></button>
+        <button class="nav-icon" id="btn-logout-trigger" style="display:none; color: var(--danger);" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </nav>
+
+    <button id="fab" class="fab" onclick="openModal('modal-form')"><i class="fa-solid fa-plus"></i></button>
+
+    <div class="container">
+        <div class="generator-bar">
+            <input type="text" id="output-data" class="gen-input" placeholder="Data acak akan muncul di sini..." readonly>
+            <button id="btn-generate" class="gen-btn" onclick="generateData()">
+                <i class="fa-solid fa-shuffle"></i> Acak
+            </button>
+        </div>
+
+        <div id="cards-container" class="card-list"></div>
+    </div>
+
+    <div id="modal-login" class="modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">Admin Access</div>
+                <button class="nav-icon" onclick="closeModal('modal-login')" style="font-size:18px;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="form-group"><input type="email" id="log-email" class="form-input"></div>
+            <div class="form-group"><input type="password" id="log-pass" class="form-input"></div>
+            <label class="check-wrap"><input type="checkbox" id="log-remember" checked> Ingat kredensial saya</label>
+            <button class="btn-submit" onclick="login()">Log In</button>
+        </div>
+    </div>
+
+    <div id="modal-form" class="modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title" id="form-title">Tambah Link</div>
+                <button class="nav-icon" onclick="closeModal('modal-form')" style="font-size:18px;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input type="hidden" id="form-key">
+            <div class="form-group"><label>Judul Kartu</label><input type="text" id="form-name" class="form-input" style="text-transform: uppercase;"></div>
+            <div class="form-group"><label>URL / Link</label><textarea id="form-url" class="form-input" style="resize: vertical; height: 70px;"></textarea></div>
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group" style="flex: 1;"><label>Harga (Opsional)</label><input type="text" id="form-price" class="form-input" onkeyup="formatRupiah(this)"></div>
+                <div class="form-group" style="flex: 1;"><label>Status (Opsional)</label><input type="text" id="form-status" class="form-input" style="text-transform: uppercase;"></div>
+            </div>
+            <button class="btn-submit" onclick="saveCard()">Simpan Data</button>
+        </div>
+    </div>
+
+    <div id="modal-random-form" class="modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">Setup Link Acak</div>
+                <button class="nav-icon" onclick="closeModal('modal-random-form')" style="font-size:18px;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="form-group"><label>Judul Kartu</label><input type="text" id="random-name" class="form-input" style="text-transform: uppercase;"></div>
+            <div class="form-group"><label>Daftar Link (Pisahkan dengan Enter)</label><textarea id="random-url" class="form-input" style="resize: vertical; height: 150px; font-size: 0.8em;"></textarea></div>
+            <button class="btn-submit" onclick="saveRandomCard()">Simpan Sistem Acak</button>
+        </div>
+    </div>
+
+    <div id="modal-alert" class="modal">
+        <div class="modal-box" style="text-align: center; max-width: 320px;">
+            <div id="alert-icon" class="alert-icon"></div>
+            <h3 id="alert-title" style="margin-bottom: 10px;"></h3>
+            <div id="alert-message" class="alert-text"></div>
+            <div id="alert-buttons" class="alert-btns"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // SISTEM STATE & INITIALIZATION
+        // ==========================================
+        let dbShopee = {};
+        let dbWilayah = [];
+        let dbNames = [];
+        let isAdmin = false;
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
+        const todayWIB = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Jakarta'});
+
+        // Fungsi Helper Title Case (Ejaan Baku)
+        function toTitleCase(str) {
+            if (!str) return "";
+            return str.toLowerCase().replace(/(?:^|\s|-)\w/g, function(match) {
+                return match.toUpperCase();
+            });
+        }
+
+        // ==========================================
+        // FETCH DATA WILAYAH (R2) & NAMA (Firebase)
+        // ==========================================
+        fetch(CONFIG.JSON_URL).then(r => r.json()).then(data => {
+            // Hilangkan daerah konflik (Papua)
+            dbWilayah = data.filter(i => !(i.provinsi||"").toUpperCase().includes("PAPUA"));
+        }).catch(e => console.error("R2 Error", e));
+
+        db.ref('used_names').once('value', snap => {
+            if(snap.exists()) snap.forEach(c => { if(c.key !== todayWIB) db.ref('used_names/'+c.key).remove(); });
+        });
+        db.ref('used_names/'+todayWIB).on('value', snap => { dbNames = snap.val() ? Object.values(snap.val()) : []; });
+        db.ref('links').on('value', snap => { dbShopee = snap.val() || {}; renderCards(); });
+
+        // ==========================================
+        // AUTHENTICATION LOGIC
+        // ==========================================
+        auth.onAuthStateChanged(user => {
+            isAdmin = !!user;
+            document.getElementById('btn-login-trigger').style.display = isAdmin ? 'none' : 'block';
+            document.getElementById('btn-logout-trigger').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('fab').style.display = isAdmin ? 'flex' : 'none';
+            renderCards();
+        });
+
+        function login() {
+            const e = document.getElementById('log-email').value;
+            const p = document.getElementById('log-pass').value;
+            const r = document.getElementById('log-remember').checked;
+            if(!e || !p) return customAlert("Input Kosong", "Silakan isi email dan password.", "info");
+            
+            auth.setPersistence(r ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION)
+                .then(() => auth.signInWithEmailAndPassword(e, p).then(() => { 
+                    closeModal('modal-login'); 
+                    document.getElementById('log-pass').value=''; 
+                }))
+                .catch(err => customAlert("Login Gagal", err.message, "danger"));
+        }
+
+        async function logout() { 
+            const confirm = await customAlert("Logout", "Apakah Anda yakin ingin keluar dari mode Admin?", "confirm");
+            if(confirm) auth.signOut(); 
+        }
+
+        // ==========================================
+        // GENERATOR DATA ACAK (FAKER & JSON)
+        // ==========================================
+        function generateData() {
+            if(dbWilayah.length === 0) return customAlert("Tunggu", "Database wilayah sedang dimuat...", "info");
+            
+            // 1. Nama Acak
+            let namaRaw = "Budi Santoso"; // Fallback
+            if (typeof window.faker !== 'undefined') {
+                window.faker.locale = "id_ID";
+                let loop = 0;
+                do { 
+                    namaRaw = window.faker.name.firstName() + " " + window.faker.name.lastName(); 
+                    loop++; 
+                } while(dbNames.includes(namaRaw) && loop < 50);
+            }
+            db.ref('used_names/'+todayWIB).push(namaRaw);
+
+            // 2. No HP Acak
+            const prx = CONFIG.HP_PREFIX[Math.floor(Math.random() * CONFIG.HP_PREFIX.length)];
+            const hp = prx + Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+
+            // 3. Wilayah Acak (30% Kota Besar)
+            let wTarget = [];
+            if(Math.random() < 0.30) {
+                wTarget = dbWilayah.filter(w => CONFIG.BIG_CITIES.some(kb => (w.kota||"").toUpperCase().includes(kb)));
+                if(wTarget.length === 0) wTarget = dbWilayah;
+            } else {
+                wTarget = dbWilayah.filter(w => !CONFIG.BIG_CITIES.some(kb => (w.kota||"").toUpperCase().includes(kb)));
+                if(wTarget.length === 0) wTarget = dbWilayah;
+            }
+            const dataW = wTarget[Math.floor(Math.random() * wTarget.length)];
+
+            // 4. Jalan / Desa Acak (50:50)
+            let jalanRaw = "";
+            if(Math.random() < 0.5) {
+                const hero = CONFIG.HEROES[Math.floor(Math.random() * CONFIG.HEROES.length)];
+                jalanRaw = `Jl. ${hero} No. ${Math.floor(Math.random()*150)+1}`;
+            } else {
+                jalanRaw = dataW.jalan ? dataW.jalan : `Desa ${dataW.desa || dataW.kecamatan}`;
+            }
+
+            // 5. Format Title Case
+            const nama = toTitleCase(namaRaw);
+            const prov = toTitleCase(dataW.provinsi || "");
+            let kota = toTitleCase(dataW.kota || "").replace("Kota Adm. ", "").replace("Kota ", "").replace("Kabupaten ", "Kab. ");
+            const kec = toTitleCase(dataW.kecamatan || "");
+            const jalan = toTitleCase(jalanRaw).replace("Jl.", "Jl.").replace("No.", "No."); // Pastikan singkatan benar
+
+            const hasil = `${nama}, ${hp}, ${prov}, ${kota}, ${dataW.kodepos || "60111"}, ${jalan}, Kec. ${kec}`;
+            
+            // Output dan Copy
+            const out = document.getElementById('output-data');
+            out.value = hasil;
+            navigator.clipboard.writeText(hasil).catch(() => {});
+            
+            // Animasi Tombol
+            const btn = document.getElementById('btn-generate');
+            btn.classList.add('success'); 
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin';
+            setTimeout(() => { 
+                btn.classList.remove('success'); 
+                btn.innerHTML = '<i class="fa-solid fa-shuffle"></i> Acak'; 
+            }, 1500);
+        }
+
+        // ==========================================
+        // RENDER UI & CARD
+        // ==========================================
+        function renderCards() {
+            const container = document.getElementById('cards-container');
+            container.innerHTML = "";
+
+            // Pisahkan Kartu Acak dan Reguler
+            const randomCard = dbShopee['RANDOM_CARD'];
+            let regs = Object.keys(dbShopee).filter(k => k !== 'RANDOM_CARD').map(k => ({ key: k, ...dbShopee[k] }));
+            
+            // Sort: Pinned (Waktu Pin Terbaru) -> Biasa (Waktu Buat Terbaru)
+            regs.sort((a, b) => {
+                if(a.pinnedAt && !b.pinnedAt) return -1;
+                if(!a.pinnedAt && b.pinnedAt) return 1;
+                if(a.pinnedAt && b.pinnedAt) return b.pinnedAt - a.pinnedAt;
+                return (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt);
+            });
+
+            // 1. RENDER KARTU ACAK (Permanen Teratas)
+            if (randomCard || isAdmin) {
+                const el = document.createElement('div');
+                const accent = '#1e293b'; // Warna solid gelap untuk kartu acak
+                el.className = 'link-card';
+                el.style.border = `2px solid ${accent}`;
+
+                if(randomCard) {
+                    const title = randomCard.title ? randomCard.title.toUpperCase() : "LINK ACAK";
+                    el.innerHTML = `
+                        <button class="copy-zone" style="background: ${accent}; color: white; border-right: none;" onclick="copyRandom(event)">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                        <div class="content-zone" onclick="openRandom()">
+                            <div class="text-info">
+                                <div class="card-title"><i class="fa-solid fa-bolt" style="color:${accent}; margin-right:5px;"></i> ${title}</div>
+                                <div class="card-subtitle">Sistem Daftar Link Acak</div>
+                            </div>
+                        </div>
+                        <div class="admin-actions" style="display:${isAdmin ? 'flex' : 'none'}; padding-right:12px;">
+                            <button class="btn-act btn-edit" onclick="openModal('modal-random-form')"><i class="fa-solid fa-pen"></i></button>
+                        </div>`;
+                } else {
+                    el.innerHTML = `
+                        <div class="content-zone" style="justify-content:center; color:${accent}; font-weight:700;" onclick="openModal('modal-random-form')">
+                            + SETUP KARTU LINK ACAK
+                        </div>`;
+                }
+                container.appendChild(el);
+            }
+
+            // 2. RENDER KARTU REGULER
+            regs.forEach((d, index) => {
+                const accent = colors[index % colors.length]; 
+                const el = document.createElement('div');
+                el.className = 'link-card';
+                el.style.border = `2px solid ${d.pinnedAt ? 'var(--warning)' : accent}`;
+                
+                const title = d.title ? d.title.toUpperCase() : "UNTITLED";
+                let badges = '';
+                if(d.status) badges += `<span class="badge badge-status">${d.status.toUpperCase()}</span>`;
+                if(d.price) badges += `<span class="badge badge-price">${d.price}</span>`;
+
+                el.innerHTML = `
+                    <button class="copy-zone" style="background: ${d.pinnedAt ? '#fffbeb' : accent+'15'}; color: ${d.pinnedAt ? 'var(--warning)' : accent}; border-right: 2px solid ${d.pinnedAt ? 'var(--warning)' : accent};" onclick="copyText(event, '${d.url}', this)">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                    <div class="content-zone" onclick="window.open('${d.url}', '_blank')">
+                        <div class="text-info">
+                            <div class="card-title">${title}</div>
+                            ${badges ? `<div class="card-subtitle">${badges}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="admin-actions" style="display:${isAdmin ? 'flex' : 'none'}; padding-right:12px;">
+                        <button class="btn-act btn-pin ${d.pinnedAt ? 'active' : ''}" onclick="togglePin('${d.key}', ${!!d.pinnedAt})"><i class="fa-solid fa-thumbtack"></i></button>
+                        <button class="btn-act btn-edit" onclick="editCard('${d.key}')"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-act btn-del" onclick="deleteCard('${d.key}')"><i class="fa-solid fa-trash"></i></button>
+                    </div>`;
+                container.appendChild(el);
+            });
+        }
+
+        // ==========================================
+        // AKSI KARTU & COPY LINK
+        // ==========================================
+        function copyText(e, text, btn) {
+            e.stopPropagation();
+            navigator.clipboard.writeText(text).catch(()=>{});
+            const oldBg = btn.style.background;
+            const oldColor = btn.style.color;
+            btn.style.background = 'var(--success)';
+            btn.style.color = 'white';
+            btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+            setTimeout(() => { 
+                btn.style.background = oldBg; 
+                btn.style.color = oldColor; 
+                btn.innerHTML = '<i class="fa-regular fa-copy"></i>'; 
+            }, 1000);
+        }
+
+        function copyRandom(e) {
+            e.stopPropagation();
+            const data = dbShopee['RANDOM_CARD'];
+            if(!data || !data.url) return;
+            const links = data.url.split('\n').map(l=>l.trim()).filter(l=>l.startsWith('http'));
+            if(links.length > 0) copyText(e, links[Math.floor(Math.random() * links.length)], e.currentTarget);
+        }
+
+        function openRandom() {
+            const data = dbShopee['RANDOM_CARD'];
+            if(!data || !data.url) return customAlert("Info", "Belum ada link acak yang diatur.", "info");
+            const links = data.url.split('\n').map(l=>l.trim()).filter(l=>l.startsWith('http'));
+            if(links.length > 0) window.open(links[Math.floor(Math.random() * links.length)], '_blank');
+        }
+
+        // ==========================================
+        // MANAJEMEN MODAL & FORM
+        // ==========================================
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+            if(id === 'modal-form') { 
+                document.getElementById('form-key').value=''; 
+                document.querySelectorAll('#modal-form .form-input').forEach(i=>i.value=''); 
+                document.getElementById('form-title').innerText='Tambah Link'; 
+            }
+            if(id === 'modal-random-form') {
+                const data = dbShopee['RANDOM_CARD'] || {};
+                document.getElementById('random-name').value = data.title || '';
+                document.getElementById('random-url').value = data.url || '';
+            }
+        }
+        
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function formatRupiah(el) {
+            let angka = el.value.replace(/[^,\d]/g, '');
+            el.value = angka ? 'Rp ' + angka.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
+        }
+
+        // ==========================================
+        // CRUD DATABASE
+        // ==========================================
+        function saveCard() {
+            const key = document.getElementById('form-key').value;
+            const data = {
+                title: document.getElementById('form-name').value,
+                url: document.getElementById('form-url').value,
+                price: document.getElementById('form-price').value,
+                status: document.getElementById('form-status').value,
+                updatedAt: Date.now()
+            };
+            if(!data.title || !data.url) return customAlert("Gagal", "Judul dan URL wajib diisi!", "danger");
+            if(key) db.ref('links/'+key).update(data);
+            else { data.createdAt = Date.now(); db.ref('links').push(data); }
+            closeModal('modal-form');
+        }
+
+        function saveRandomCard() {
+            db.ref('links/RANDOM_CARD').set({
+                title: document.getElementById('random-name').value,
+                url: document.getElementById('random-url').value,
+                updatedAt: Date.now()
+            });
+            closeModal('modal-random-form');
+        }
+
+        function editCard(key) {
+            const data = dbShopee[key];
+            if(!data) return;
+            document.getElementById('form-key').value = key;
+            document.getElementById('form-name').value = data.title || '';
+            document.getElementById('form-url').value = data.url || '';
+            document.getElementById('form-price').value = data.price || '';
+            document.getElementById('form-status').value = data.status || '';
+            document.getElementById('form-title').innerText = 'Edit Link';
+            document.getElementById('modal-form').classList.add('active');
+        }
+
+        function togglePin(key, isPinned) { 
+            db.ref('links/'+key).update({ pinnedAt: isPinned ? null : Date.now() }); 
+        }
+
+        async function deleteCard(key) { 
+            const confirm = await customAlert("Hapus Kartu", "Yakin ingin menghapus link ini secara permanen?", "confirm");
+            if(confirm) db.ref('links/'+key).remove(); 
+        }
+
+        // ==========================================
+        // CUSTOM ALERT ELEGANT
+        // ==========================================
+        function customAlert(title, message, type) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('modal-alert');
+                document.getElementById('alert-title').innerText = title;
+                document.getElementById('alert-message').innerText = message;
+                const btnBox = document.getElementById('alert-buttons');
+                const icon = document.getElementById('alert-icon');
+
+                modal.classList.add('active');
+
+                if (type === 'confirm') {
+                    icon.innerHTML = '<i class="fa-solid fa-circle-question" style="color: var(--primary);"></i>';
+                    btnBox.innerHTML = `
+                        <button class="btn-alert btn-cancel" id="btn-cancel">Batal</button>
+                        <button class="btn-alert btn-confirm" id="btn-confirm">Ya, Lanjutkan</button>
+                    `;
+                    document.getElementById('btn-cancel').onclick = () => { modal.classList.remove('active'); resolve(false); };
+                    document.getElementById('btn-confirm').onclick = () => { modal.classList.remove('active'); resolve(true); };
+                } else if (type === 'danger') {
+                    icon.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="color: var(--danger);"></i>';
+                    btnBox.innerHTML = `<button class="btn-alert btn-danger" id="btn-ok">Tutup</button>`;
+                    document.getElementById('btn-ok').onclick = () => { modal.classList.remove('active'); resolve(true); };
+                } else {
+                    icon.innerHTML = '<i class="fa-solid fa-circle-info" style="color: var(--primary);"></i>';
+                    btnBox.innerHTML = `<button class="btn-alert btn-confirm" id="btn-ok">Mengerti</button>`;
+                    document.getElementById('btn-ok').onclick = () => { modal.classList.remove('active'); resolve(true); };
+                }
+            });
+        }
+    </script>
+</body>
+</html>
