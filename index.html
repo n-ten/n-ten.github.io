@@ -13,45 +13,63 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
     <style>
+        /* COLOR PALETTE & THEMES */
         :root {
             --bg: #f4f7f6;
             --card-bg: #ffffff;
+            --input-bg: #f8fafc;
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
             --text-dark: #1e293b;
             --text-gray: #64748b;
-            --border: #cbd5e1; /* Dipertegas */
+            --border: #cbd5e1;
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --nav-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --input-bg: #0f172a;
+            --text-dark: #f8fafc;
+            --text-gray: #94a3b8;
+            --border: #334155;
+            --nav-bg: rgba(30, 41, 59, 0.95);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 
-        body { background: var(--bg); color: var(--text-dark); padding-top: 80px; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; }
+        body { background: var(--bg); color: var(--text-dark); padding-top: 80px; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; transition: background 0.3s, color 0.3s; }
 
         /* NAVBAR */
         .navbar {
             position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px);
-            border-bottom: 1px solid var(--border); display: flex; justify-content: flex-end; align-items: center; padding: 0 20px; z-index: 100;
+            background: var(--nav-bg); backdrop-filter: blur(5px);
+            border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 100;
+            transition: background 0.3s, border-color 0.3s;
         }
+        .nav-right { display: flex; gap: 15px; }
         .nav-icon { background: none; border: none; font-size: 22px; color: var(--text-gray); cursor: pointer; transition: color 0.2s; }
         .nav-icon:hover { color: var(--primary); }
 
         /* CONTAINER */
         .container { width: 100%; max-width: 500px; padding: 0 15px; }
 
-        /* GENERATOR BAR */
-        .generator-bar { display: flex; gap: 10px; height: 50px; margin-bottom: 25px; }
+        /* GENERATOR BAR (VERTIKAL) */
+        .generator-card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid var(--border); transition: background 0.3s, border-color 0.3s; }
+        .generator-bar { display: flex; flex-direction: column; gap: 12px; }
+        
         .gen-input { 
-            flex: 1; height: 100%; border: 2px solid var(--border); border-radius: 10px; padding: 0 15px; 
-            font-size: 0.9em; font-weight: 500; background: var(--card-bg); outline: none; transition: border-color 0.2s;
+            width: 100%; height: 50px; border: 2px solid var(--border); border-radius: 10px; padding: 0 15px; 
+            font-size: 0.9em; font-weight: 500; background: var(--input-bg); color: var(--text-dark); outline: none; transition: all 0.2s;
         }
         .gen-input:focus { border-color: var(--primary); }
+        
         .gen-btn { 
-            height: 100%; padding: 0 20px; background: var(--primary); color: white; border: none; border-radius: 10px;
-            font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; flex-shrink: 0;
+            width: 100%; height: 50px; background: var(--primary); color: white; border: none; border-radius: 10px;
+            font-size: 1.05em; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s;
         }
         .gen-btn:hover { background: var(--primary-hover); }
         .gen-btn.success { background: var(--success); }
@@ -60,7 +78,7 @@
         .card-list { display: flex; flex-direction: column; gap: 14px; }
         .link-card {
             display: flex; background: var(--card-bg); border-radius: 12px; overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: transform 0.2s, background 0.3s, border-color 0.3s;
         }
         .link-card:hover { transform: translateY(-2px); }
 
@@ -73,42 +91,40 @@
         /* Konten Kanan */
         .content-zone { flex: 1; padding: 14px; display: flex; justify-content: space-between; align-items: center; overflow: hidden; cursor: pointer;}
         .text-info { display: flex; flex-direction: column; overflow: hidden; }
-        .card-title { font-weight: 700; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: UPPERCASE; letter-spacing: 0.5px;}
+        .card-title { font-weight: 700; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.5px;}
         .card-subtitle { font-size: 0.75em; color: var(--text-gray); margin-top: 6px; display: flex; gap: 8px; align-items: center; }
         
         .badge { padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.85em; }
-        .badge-price { background: #e0e7ff; color: var(--primary); }
-        .badge-status { background: #fef3c7; color: #b45309; }
+        .badge-price { background: rgba(37, 99, 235, 0.15); color: var(--primary); }
+        .badge-status { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
 
         /* Admin Buttons */
         .admin-actions { display: none; gap: 6px; margin-left: 10px; }
-        .btn-act { width: 34px; height: 34px; border-radius: 8px; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 13px; transition: 0.2s; }
-        .btn-pin { background: #f1f5f9; color: var(--text-gray); }
-        .btn-pin.active { background: #fffbeb; color: var(--warning); }
-        .btn-edit { background: #f1f5f9; color: var(--text-gray); }
-        .btn-edit:hover { background: #e2e8f0; color: var(--primary); }
-        .btn-del { background: #fef2f2; color: var(--danger); }
-        .btn-del:hover { background: #fee2e2; }
+        .btn-act { width: 34px; height: 34px; border-radius: 8px; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 13px; transition: 0.2s; background: var(--input-bg); color: var(--text-gray); }
+        .btn-pin.active { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .btn-edit:hover { background: rgba(37, 99, 235, 0.2); color: var(--primary); }
+        .btn-del { color: var(--danger); }
+        .btn-del:hover { background: rgba(239, 68, 68, 0.2); }
 
         /* FLOATING BUTTON */
         .fab {
-            position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; background: var(--text-dark); color: white;
-            border-radius: 50%; border: none; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; background: var(--primary); color: white;
+            border-radius: 50%; border: none; font-size: 20px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
             cursor: pointer; display: none; justify-content: center; align-items: center; transition: transform 0.2s; z-index: 99;
         }
-        .fab:hover { transform: scale(1.08); background: var(--primary); }
+        .fab:hover { transform: scale(1.08); background: var(--primary-hover); }
 
         /* MODALS FORM */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; opacity: 0; transition: opacity 0.3s; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; opacity: 0; transition: opacity 0.3s; }
         .modal.active { display: flex; opacity: 1; }
-        .modal-box { background: white; width: 100%; max-width: 380px; border-radius: 16px; padding: 24px; box-shadow: 0 15px 30px rgba(0,0,0,0.15); transform: translateY(20px); transition: transform 0.3s; }
+        .modal-box { background: var(--card-bg); width: 100%; max-width: 380px; border-radius: 16px; padding: 24px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.3s, background 0.3s; }
         .modal.active .modal-box { transform: translateY(0); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-title { font-weight: 800; font-size: 1.1em; color: var(--text-dark);}
         
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 0.85em; font-weight: 600; color: var(--text-gray); margin-bottom: 6px; }
-        .form-input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; outline: none; font-family: inherit; font-size: 0.95em; transition: border-color 0.2s;}
+        .form-input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; outline: none; font-family: inherit; font-size: 0.95em; transition: border-color 0.2s; background: var(--input-bg); color: var(--text-dark); }
         .form-input:focus { border-color: var(--primary); }
         
         .check-wrap { display: flex; align-items: center; gap: 8px; font-size: 0.85em; font-weight: 600; color: var(--text-gray); cursor: pointer; margin-bottom: 20px; }
@@ -117,10 +133,10 @@
 
         /* CUSTOM ALERT */
         .alert-icon { font-size: 45px; margin-bottom: 15px; }
-        .alert-text { color: var(--text-gray); font-size: 0.9em; margin-bottom: 25px; line-height: 1.5; }
+        .alert-text { color: var(--text-gray); font-size: 0.95em; margin-bottom: 25px; line-height: 1.5; font-weight: 500;}
         .alert-btns { display: flex; gap: 10px; justify-content: center; }
-        .btn-alert { flex: 1; padding: 12px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; }
-        .btn-cancel { background: #f1f5f9; color: var(--text-dark); }
+        .btn-alert { flex: 1; padding: 12px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s;}
+        .btn-cancel { background: var(--input-bg); color: var(--text-dark); border: 1px solid var(--border); }
         .btn-confirm { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
     </style>
@@ -128,8 +144,12 @@
 <body>
 
     <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+
+    <script>
         const CONFIG = {
-            // 1. Kredensial Firebase
             FIREBASE: {
                 apiKey: "AIzaSyC7KMPorNrZ4FzsYmQA1pMQh-X6f3YFPuI",
                 authDomain: "jeff-link.firebaseapp.com",
@@ -137,34 +157,36 @@
                 projectId: "jeff-link",
                 storageBucket: "jeff-link.firebasestorage.app"
             },
-            // 2. URL Database Wilayah (Cloudflare R2)
-            JSON_URL: "./kota.json",
-            
-            // 3. Data Generator Acak
+            JSON_URL: "./kota.json", 
             HP_PREFIX: ['0811','0812','0813','0821','0822','0852','0815','0816','0857','0858','0817','0818','0819','0859','0877','0878','0895','0896','0897','0898'],
             BIG_CITIES: ["JAKARTA", "SURABAYA", "BANDUNG", "MEDAN", "SEMARANG", "MAKASSAR", "PALEMBANG", "DENPASAR", "BOGOR", "DEPOK", "TANGERANG", "BEKASI", "SIDOARJO", "MALANG", "SURAKARTA", "YOGYAKARTA"],
             HEROES: ["Soekarno", "Hatta", "Sudirman", "Diponegoro", "Pattimura", "Imam Bonjol", "Teuku Umar", "Cut Nyak Dien", "Kartini", "Ki Hajar Dewantara", "Ahmad Yani", "Bung Tomo", "Sisingamangaraja", "Hasanuddin", "Antasari", "Agus Salim", "Hayam Wuruk", "Gajah Mada", "Raden Fatah", "Mulawarman", "Purnawarman", "Hasyim Asyari", "Wahid Hasyim", "Ahmad Dahlan", "Samanhudi", "Nuku", "Sultan Ageng Tirtayasa", "Sultan Syahrir", "Tan Malaka", "Mohammad Natsir", "Tjokroaminoto", "Sam Ratulangi", "Soetomo", "Cipto Mangunkusumo", "Dewi Sartika", "Nyi Ageng Serang", "Rasuna Said", "Fatmawati", "Yos Sudarso", "R.E. Martadinata", "Suprapto", "M.T. Haryono", "S. Parman", "D.I. Panjaitan", "Sutoyo Siswomiharjo", "Pierre Tendean", "Katamso", "Halim Perdanakusuma", "Iswahyudi", "Abdul Muis", "Ir. Juanda", "Slamet Riyadi", "Urip Sumohardjo", "Teuku Cik Ditiro", "Mahmud Badaruddin", "Raden Intan", "Sultan Thaha", "Iskandar Muda", "Teuku Nyak Arif", "Frans Kaisiepo", "Silas Papare", "Marthen Indey", "Johannes Dimara", "Opo Daeng Risaju", "Maria Walanda Maramis", "W.R. Supratman", "Ismail Marzuki", "Chairil Anwar", "Raden Saleh", "Affandi", "Zainal Mustofa", "Mas Mansyur", "Tirtayasa", "Nuruddin Ar-Raniry", "Hamzah Fansuri", "Syaikh Abdurrauf", "Syaikh Yusuf", "Syaikh Nawawi", "Ranggawarsita", "Suriyadi", "Dirgantara", "Soepeno", "Sutomo", "Suharto", "Gatot Subroto", "Veteran", "Pemuda", "Perintis Kemerdekaan", "Bahari", "Angkasa", "Bumi", "Nusantara"]
         };
 
-        // Inisialisasi Firebase
-        firebase.initializeApp(CONFIG.FIREBASE);
+        if (!firebase.apps.length) { firebase.initializeApp(CONFIG.FIREBASE); }
         const db = firebase.database();
         const auth = firebase.auth();
     </script>
 
     <nav class="navbar">
-        <button class="nav-icon" id="btn-login-trigger" onclick="openModal('modal-login')"><i class="fa-solid fa-user"></i></button>
-        <button class="nav-icon" id="btn-logout-trigger" style="display:none; color: var(--danger);" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+        <button class="nav-icon" id="theme-toggle" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i></button>
+        
+        <div class="nav-right">
+            <button class="nav-icon" id="btn-login-trigger" onclick="openModal('modal-login')"><i class="fa-solid fa-user"></i></button>
+            <button class="nav-icon" id="btn-logout-trigger" style="display:none; color: var(--danger);" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>
     </nav>
 
     <button id="fab" class="fab" onclick="openModal('modal-form')"><i class="fa-solid fa-plus"></i></button>
 
     <div class="container">
-        <div class="generator-bar">
-            <input type="text" id="output-data" class="gen-input" placeholder="Data acak akan muncul di sini..." readonly>
-            <button id="btn-generate" class="gen-btn" onclick="generateData()">
-                <i class="fa-solid fa-shuffle"></i> Acak
-            </button>
+        <div class="generator-card">
+            <div class="generator-bar">
+                <input type="text" id="output-data" class="gen-input" placeholder="Data acak akan muncul di sini..." readonly>
+                <button id="btn-generate" class="gen-btn" onclick="generateData()">
+                    <i class="fa-solid fa-shuffle"></i> Acak Data
+                </button>
+            </div>
         </div>
 
         <div id="cards-container" class="card-list"></div>
@@ -215,7 +237,7 @@
     <div id="modal-alert" class="modal">
         <div class="modal-box" style="text-align: center; max-width: 320px;">
             <div id="alert-icon" class="alert-icon"></div>
-            <h3 id="alert-title" style="margin-bottom: 10px;"></h3>
+            <h3 id="alert-title" style="margin-bottom: 10px; color: var(--text-dark);"></h3>
             <div id="alert-message" class="alert-text"></div>
             <div id="alert-buttons" class="alert-btns"></div>
         </div>
@@ -223,7 +245,29 @@
 
     <script>
         // ==========================================
-        // SISTEM STATE & INITIALIZATION
+        // THEME TOGGLE (DARK/LIGHT MODE)
+        // ==========================================
+        function toggleTheme() {
+            const body = document.documentElement;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            setThemeIcon(newTheme);
+        }
+
+        function setThemeIcon(theme) {
+            const icon = document.getElementById('theme-toggle');
+            icon.innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun" style="color:#f59e0b;"></i>' : '<i class="fa-solid fa-moon"></i>';
+        }
+
+        // Set initial icon on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setThemeIcon(savedTheme);
+        });
+
+        // ==========================================
+        // STATE & INITIALIZATION
         // ==========================================
         let dbShopee = {};
         let dbWilayah = [];
@@ -232,92 +276,100 @@
         const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
         const todayWIB = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Jakarta'});
 
-        // Fungsi Helper Title Case (Ejaan Baku)
         function toTitleCase(str) {
             if (!str) return "";
-            return str.toLowerCase().replace(/(?:^|\s|-)\w/g, function(match) {
-                return match.toUpperCase();
-            });
+            return str.toLowerCase().replace(/(?:^|\s|-)\w/g, match => match.toUpperCase());
         }
-
-       // ==========================================
-        // FETCH DATA WILAYAH (GITHUB) & BONGKAR JSON
-        // ==========================================
-        fetch(CONFIG.JSON_URL)
-            .then(r => {
-                if (!r.ok) throw new Error("File JSON tidak ditemukan");
-                return r.json();
-            })
-            .then(data => {
-                let flatData = [];
-                // Membongkar 4 lapisan JSON: Provinsi -> Kota -> Kec -> Desa: Kodepos
-                for (const prov in data) {
-                    // Filter: Hindari wilayah Papua
-                    if (prov.toUpperCase().includes("PAPUA")) continue; 
-                    
-                    for (const kota in data[prov]) {
-                        for (const kec in data[prov][kota]) {
-                            for (const desa in data[prov][kota][kec]) {
-                                flatData.push({
-                                    provinsi: prov,
-                                    kota: kota,
-                                    kecamatan: kec,
-                                    desa: desa,
-                                    kodepos: data[prov][kota][kec][desa]
-                                });
-                            }
-                        }
-                    }
-                }
-                dbWilayah = flatData;
-                console.log("Database wilayah siap! Total:", dbWilayah.length);
-            })
-            .catch(e => {
-                console.error("Gagal memuat kota.json:", e);
-                // Fallback Darurat agar tidak macet
-                dbWilayah = [
-                    { provinsi: "Jawa Timur", kota: "Surabaya", kecamatan: "Krembangan", desa: "Kemayoran", kodepos: "60111" }
-                ];
-            });
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
         // ==========================================
-        // AUTHENTICATION LOGIC
+        // OTENTIKASI & REALTIME DATABASE
         // ==========================================
         auth.onAuthStateChanged(user => {
             isAdmin = !!user;
             document.getElementById('btn-login-trigger').style.display = isAdmin ? 'none' : 'block';
             document.getElementById('btn-logout-trigger').style.display = isAdmin ? 'block' : 'none';
             document.getElementById('fab').style.display = isAdmin ? 'flex' : 'none';
-            renderCards();
+            renderCards(); 
         });
 
+        db.ref('linkshopee').on('value', snap => { 
+            dbShopee = snap.val() || {}; 
+            renderCards(); 
+        });
+
+        const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+        db.ref('used_names').on('value', snap => {
+            dbNames = [];
+            const now = Date.now();
+            let updates = {};
+            let needsCleanup = false;
+
+            if(snap.exists()) {
+                snap.forEach(child => {
+                    const data = child.val();
+                    if (now - data.timestamp > TWELVE_HOURS) {
+                        updates[child.key] = null;
+                        needsCleanup = true;
+                    } else {
+                        dbNames.push(data.name);
+                    }
+                });
+                if(needsCleanup) db.ref('used_names').update(updates);
+            }
+        });
+
+        // MENGAMBIL DATA WILAYAH DARI GITHUB (Dirombak nested to flat)
+        fetch(CONFIG.JSON_URL).then(r => {
+            if (!r.ok) throw new Error("JSON tidak ditemukan"); return r.json();
+        }).then(data => {
+            let flatData = [];
+            for (const prov in data) {
+                if (prov.toUpperCase().includes("PAPUA")) continue; 
+                for (const kota in data[prov]) {
+                    for (const kec in data[prov][kota]) {
+                        for (const desa in data[prov][kota][kec]) {
+                            flatData.push({
+                                provinsi: prov, kota: kota, kecamatan: kec, desa: desa, kodepos: data[prov][kota][kec][desa]
+                            });
+                        }
+                    }
+                }
+            }
+            dbWilayah = flatData;
+        }).catch(e => {
+            console.error("Gagal memuat kota.json:", e);
+            dbWilayah = [{ provinsi: "Jawa Timur", kota: "Surabaya", kecamatan: "Krembangan", desa: "Kemayoran", kodepos: "60111" }];
+        });
+
+        // ==========================================
+        // FUNGSI ADMIN LOGIN/LOGOUT
+        // ==========================================
         function login() {
             const e = document.getElementById('log-email').value;
             const p = document.getElementById('log-pass').value;
             const r = document.getElementById('log-remember').checked;
-            if(!e || !p) return customAlert("Input Kosong", "Silakan isi email dan password.", "info");
+            if(!e || !p) return customAlert("Input Kosong", "Silakan isi email dan password.", "danger");
             
             auth.setPersistence(r ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION)
                 .then(() => auth.signInWithEmailAndPassword(e, p).then(() => { 
-                    closeModal('modal-login'); 
-                    document.getElementById('log-pass').value=''; 
+                    closeModal('modal-login'); document.getElementById('log-pass').value=''; 
                 }))
-                .catch(err => customAlert("Login Gagal", err.message, "danger"));
+                .catch(err => customAlert("Login Gagal", "Email atau Password Salah", "danger"));
         }
 
         async function logout() { 
-            const confirm = await customAlert("Logout", "Apakah Anda yakin ingin keluar dari mode Admin?", "confirm");
+            const confirm = await customAlert("Logout", "Keluar dari mode Admin?", "confirm");
             if(confirm) auth.signOut(); 
         }
 
         // ==========================================
-        // GENERATOR DATA ACAK (FAKER & JSON)
+        // GENERATOR DATA ACAK
         // ==========================================
         function generateData() {
             if(dbWilayah.length === 0) return customAlert("Tunggu", "Database wilayah sedang dimuat...", "info");
             
-            // 1. Nama Acak
-            let namaRaw = "Budi Santoso"; // Fallback
+            let namaRaw = "Budi Santoso";
             if (typeof window.faker !== 'undefined') {
                 window.faker.locale = "id_ID";
                 let loop = 0;
@@ -326,13 +378,12 @@
                     loop++; 
                 } while(dbNames.includes(namaRaw) && loop < 50);
             }
-            db.ref('used_names/'+todayWIB).push(namaRaw);
+            
+            db.ref('used_names').push({ name: namaRaw, timestamp: Date.now() });
 
-            // 2. No HP Acak
             const prx = CONFIG.HP_PREFIX[Math.floor(Math.random() * CONFIG.HP_PREFIX.length)];
             const hp = prx + Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
 
-            // 3. Wilayah Acak (30% Kota Besar)
             let wTarget = [];
             if(Math.random() < 0.30) {
                 wTarget = dbWilayah.filter(w => CONFIG.BIG_CITIES.some(kb => (w.kota||"").toUpperCase().includes(kb)));
@@ -343,7 +394,6 @@
             }
             const dataW = wTarget[Math.floor(Math.random() * wTarget.length)];
 
-            // 4. Jalan / Desa Acak (50:50)
             let jalanRaw = "";
             if(Math.random() < 0.5) {
                 const hero = CONFIG.HEROES[Math.floor(Math.random() * CONFIG.HEROES.length)];
@@ -352,42 +402,34 @@
                 jalanRaw = dataW.jalan ? dataW.jalan : `Desa ${dataW.desa || dataW.kecamatan}`;
             }
 
-            // 5. Format Title Case
             const nama = toTitleCase(namaRaw);
             const prov = toTitleCase(dataW.provinsi || "");
-            let kota = toTitleCase(dataW.kota || "").replace("Kota Adm. ", "").replace("Kota ", "").replace("Kabupaten ", "Kab. ");
+            const kota = toTitleCase(dataW.kota || "").replace(/,\s*Kabupaten/gi, "").replace(/Kota Adm\.\s*/gi, "").replace(/Kota\s+/gi, "").replace(/Kabupaten\s+/gi, "Kab. ");
             const kec = toTitleCase(dataW.kecamatan || "");
-            const jalan = toTitleCase(jalanRaw).replace("Jl.", "Jl.").replace("No.", "No."); // Pastikan singkatan benar
+            const jalan = toTitleCase(jalanRaw).replace(/Jl\./gi, "Jl.").replace(/No\./gi, "No."); 
 
             const hasil = `${nama}, ${hp}, ${prov}, ${kota}, ${dataW.kodepos || "60111"}, ${jalan}, Kec. ${kec}`;
             
-            // Output dan Copy
             const out = document.getElementById('output-data');
             out.value = hasil;
             navigator.clipboard.writeText(hasil).catch(() => {});
             
-            // Animasi Tombol
             const btn = document.getElementById('btn-generate');
             btn.classList.add('success'); 
             btn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin';
-            setTimeout(() => { 
-                btn.classList.remove('success'); 
-                btn.innerHTML = '<i class="fa-solid fa-shuffle"></i> Acak'; 
-            }, 1500);
+            setTimeout(() => { btn.classList.remove('success'); btn.innerHTML = '<i class="fa-solid fa-shuffle"></i> Acak Data'; }, 1500);
         }
 
         // ==========================================
-        // RENDER UI & CARD
+        // RENDER UI KARTU
         // ==========================================
         function renderCards() {
             const container = document.getElementById('cards-container');
             container.innerHTML = "";
 
-            // Pisahkan Kartu Acak dan Reguler
-            const randomCard = dbShopee['RANDOM_CARD'];
-            let regs = Object.keys(dbShopee).filter(k => k !== 'RANDOM_CARD').map(k => ({ key: k, ...dbShopee[k] }));
+            const randomCard = dbShopee['ID_RANDOM_LOCKED'];
+            let regs = Object.keys(dbShopee).filter(k => k !== 'ID_RANDOM_LOCKED').map(k => ({ key: k, ...dbShopee[k] }));
             
-            // Sort: Pinned (Waktu Pin Terbaru) -> Biasa (Waktu Buat Terbaru)
             regs.sort((a, b) => {
                 if(a.pinnedAt && !b.pinnedAt) return -1;
                 if(!a.pinnedAt && b.pinnedAt) return 1;
@@ -395,10 +437,10 @@
                 return (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt);
             });
 
-            // 1. RENDER KARTU ACAK (Permanen Teratas)
+            // KARTU ACAK
             if (randomCard || isAdmin) {
                 const el = document.createElement('div');
-                const accent = '#1e293b'; // Warna solid gelap untuk kartu acak
+                const accent = 'var(--primary)'; 
                 el.className = 'link-card';
                 el.style.border = `2px solid ${accent}`;
 
@@ -426,7 +468,7 @@
                 container.appendChild(el);
             }
 
-            // 2. RENDER KARTU REGULER
+            // KARTU REGULER
             regs.forEach((d, index) => {
                 const accent = colors[index % colors.length]; 
                 const el = document.createElement('div');
@@ -439,7 +481,7 @@
                 if(d.price) badges += `<span class="badge badge-price">${d.price}</span>`;
 
                 el.innerHTML = `
-                    <button class="copy-zone" style="background: ${d.pinnedAt ? '#fffbeb' : accent+'15'}; color: ${d.pinnedAt ? 'var(--warning)' : accent}; border-right: 2px solid ${d.pinnedAt ? 'var(--warning)' : accent};" onclick="copyText(event, '${d.url}', this)">
+                    <button class="copy-zone" style="background: ${d.pinnedAt ? 'var(--warning)' : accent}; color: white; border-right: none;" onclick="copyText(event, '${d.url}', this)">
                         <i class="fa-regular fa-copy"></i>
                     </button>
                     <div class="content-zone" onclick="window.open('${d.url}', '_blank')">
@@ -458,41 +500,32 @@
         }
 
         // ==========================================
-        // AKSI KARTU & COPY LINK
+        // FUNGSI KLIK & CRUD ADMIN
         // ==========================================
         function copyText(e, text, btn) {
             e.stopPropagation();
             navigator.clipboard.writeText(text).catch(()=>{});
             const oldBg = btn.style.background;
-            const oldColor = btn.style.color;
             btn.style.background = 'var(--success)';
-            btn.style.color = 'white';
             btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-            setTimeout(() => { 
-                btn.style.background = oldBg; 
-                btn.style.color = oldColor; 
-                btn.innerHTML = '<i class="fa-regular fa-copy"></i>'; 
-            }, 1000);
+            setTimeout(() => { btn.style.background = oldBg; btn.innerHTML = '<i class="fa-regular fa-copy"></i>'; }, 1000);
         }
 
         function copyRandom(e) {
             e.stopPropagation();
-            const data = dbShopee['RANDOM_CARD'];
+            const data = dbShopee['ID_RANDOM_LOCKED'];
             if(!data || !data.url) return;
             const links = data.url.split('\n').map(l=>l.trim()).filter(l=>l.startsWith('http'));
             if(links.length > 0) copyText(e, links[Math.floor(Math.random() * links.length)], e.currentTarget);
         }
 
         function openRandom() {
-            const data = dbShopee['RANDOM_CARD'];
+            const data = dbShopee['ID_RANDOM_LOCKED'];
             if(!data || !data.url) return customAlert("Info", "Belum ada link acak yang diatur.", "info");
             const links = data.url.split('\n').map(l=>l.trim()).filter(l=>l.startsWith('http'));
             if(links.length > 0) window.open(links[Math.floor(Math.random() * links.length)], '_blank');
         }
 
-        // ==========================================
-        // MANAJEMEN MODAL & FORM
-        // ==========================================
         function openModal(id) {
             document.getElementById(id).classList.add('active');
             if(id === 'modal-form') { 
@@ -501,22 +534,17 @@
                 document.getElementById('form-title').innerText='Tambah Link'; 
             }
             if(id === 'modal-random-form') {
-                const data = dbShopee['RANDOM_CARD'] || {};
+                const data = dbShopee['ID_RANDOM_LOCKED'] || {};
                 document.getElementById('random-name').value = data.title || '';
                 document.getElementById('random-url').value = data.url || '';
             }
         }
         
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
         function formatRupiah(el) {
             let angka = el.value.replace(/[^,\d]/g, '');
             el.value = angka ? 'Rp ' + angka.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
         }
 
-        // ==========================================
-        // CRUD DATABASE
-        // ==========================================
         function saveCard() {
             const key = document.getElementById('form-key').value;
             const data = {
@@ -527,13 +555,13 @@
                 updatedAt: Date.now()
             };
             if(!data.title || !data.url) return customAlert("Gagal", "Judul dan URL wajib diisi!", "danger");
-            if(key) db.ref('links/'+key).update(data);
-            else { data.createdAt = Date.now(); db.ref('links').push(data); }
+            if(key) db.ref('linkshopee/'+key).update(data);
+            else { data.createdAt = Date.now(); db.ref('linkshopee').push(data); }
             closeModal('modal-form');
         }
 
         function saveRandomCard() {
-            db.ref('links/RANDOM_CARD').set({
+            db.ref('linkshopee/ID_RANDOM_LOCKED').set({
                 title: document.getElementById('random-name').value,
                 url: document.getElementById('random-url').value,
                 updatedAt: Date.now()
@@ -553,13 +581,11 @@
             document.getElementById('modal-form').classList.add('active');
         }
 
-        function togglePin(key, isPinned) { 
-            db.ref('links/'+key).update({ pinnedAt: isPinned ? null : Date.now() }); 
-        }
+        function togglePin(key, isPinned) { db.ref('linkshopee/'+key).update({ pinnedAt: isPinned ? null : Date.now() }); }
 
         async function deleteCard(key) { 
             const confirm = await customAlert("Hapus Kartu", "Yakin ingin menghapus link ini secara permanen?", "confirm");
-            if(confirm) db.ref('links/'+key).remove(); 
+            if(confirm) db.ref('linkshopee/'+key).remove(); 
         }
 
         // ==========================================
@@ -577,10 +603,7 @@
 
                 if (type === 'confirm') {
                     icon.innerHTML = '<i class="fa-solid fa-circle-question" style="color: var(--primary);"></i>';
-                    btnBox.innerHTML = `
-                        <button class="btn-alert btn-cancel" id="btn-cancel">Batal</button>
-                        <button class="btn-alert btn-confirm" id="btn-confirm">Ya, Lanjutkan</button>
-                    `;
+                    btnBox.innerHTML = `<button class="btn-alert btn-cancel" id="btn-cancel">Batal</button><button class="btn-alert btn-confirm" id="btn-confirm">Ya, Lanjut</button>`;
                     document.getElementById('btn-cancel').onclick = () => { modal.classList.remove('active'); resolve(false); };
                     document.getElementById('btn-confirm').onclick = () => { modal.classList.remove('active'); resolve(true); };
                 } else if (type === 'danger') {
