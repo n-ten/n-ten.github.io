@@ -72,25 +72,23 @@
             font-size: 1.05em; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s;
         }
         .gen-btn:hover { background: var(--primary-hover); }
-        .gen-btn.success { background: var(--success); }
 
         /* CARD LIST */
         .card-list { display: flex; flex-direction: column; gap: 14px; }
         .link-card {
             display: flex; background: var(--card-bg); border-radius: 12px; overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: transform 0.2s, background 0.3s, border-color 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); min-height: 74px; transition: background 0.3s, border-color 0.3s;
         }
-        .link-card:hover { transform: translateY(-2px); }
 
         /* Copy Button (Kiri Penuh) */
         .copy-zone {
             width: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; 
-            font-size: 20px; transition: all 0.2s; flex-shrink: 0; align-self: stretch; border: none; outline: none;
+            font-size: 20px; flex-shrink: 0; align-self: stretch; border: none; outline: none;
         }
         
         /* Konten Kanan */
-        .content-zone { flex: 1; padding: 14px; display: flex; justify-content: space-between; align-items: center; overflow: hidden; cursor: pointer;}
-        .text-info { display: flex; flex-direction: column; overflow: hidden; }
+        .content-zone { flex: 1; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; overflow: hidden; cursor: pointer;}
+        .text-info { display: flex; flex-direction: column; justify-content: center; overflow: hidden; height: 100%; }
         .card-title { font-weight: 700; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.5px;}
         .card-subtitle { font-size: 0.75em; color: var(--text-gray); margin-top: 6px; display: flex; gap: 8px; align-items: center; }
         
@@ -98,26 +96,28 @@
         .badge-price { background: rgba(37, 99, 235, 0.15); color: var(--primary); }
         .badge-status { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
 
-        /* Admin Buttons */
-        .admin-actions { display: none; gap: 6px; margin-left: 10px; }
-        .btn-act { width: 34px; height: 34px; border-radius: 8px; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 13px; transition: 0.2s; background: var(--input-bg); color: var(--text-gray); }
-        .btn-pin.active { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-        .btn-edit:hover { background: rgba(37, 99, 235, 0.2); color: var(--primary); }
-        .btn-del { color: var(--danger); }
-        .btn-del:hover { background: rgba(239, 68, 68, 0.2); }
+        /* Admin Buttons (Lebih Rapi & Jelas) */
+        .admin-actions { display: none; gap: 8px; margin-left: 10px; align-items: center; }
+        .btn-act { 
+            width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); 
+            cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 13px; 
+            background: var(--card-bg); color: var(--text-gray); transition: border-color 0.2s;
+        }
+        .btn-act:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-pin.active { background: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: var(--warning); }
+        .btn-del:hover { border-color: var(--danger); color: var(--danger); background: rgba(239, 68, 68, 0.1); }
 
         /* FLOATING BUTTON */
         .fab {
-            position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; background: var(--primary); color: white;
-            border-radius: 50%; border: none; font-size: 20px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
-            cursor: pointer; display: none; justify-content: center; align-items: center; transition: transform 0.2s; z-index: 99;
+            position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; background: var(--text-dark); color: white;
+            border-radius: 50%; border: none; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer; display: none; justify-content: center; align-items: center; z-index: 99;
         }
-        .fab:hover { transform: scale(1.08); background: var(--primary-hover); }
 
         /* MODALS FORM */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; opacity: 0; transition: opacity 0.3s; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; opacity: 0; transition: opacity 0.2s; }
         .modal.active { display: flex; opacity: 1; }
-        .modal-box { background: var(--card-bg); width: 100%; max-width: 380px; border-radius: 16px; padding: 24px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.3s, background 0.3s; }
+        .modal-box { background: var(--card-bg); width: 100%; max-width: 380px; border-radius: 16px; padding: 24px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.2s, background 0.3s; }
         .modal.active .modal-box { transform: translateY(0); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-title { font-weight: 800; font-size: 1.1em; color: var(--text-dark);}
@@ -170,7 +170,6 @@
 
     <nav class="navbar">
         <button class="nav-icon" id="theme-toggle" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i></button>
-        
         <div class="nav-right">
             <button class="nav-icon" id="btn-login-trigger" onclick="openModal('modal-login')"><i class="fa-solid fa-user"></i></button>
             <button class="nav-icon" id="btn-logout-trigger" style="display:none; color: var(--danger);" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
@@ -261,10 +260,7 @@
             icon.innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun" style="color:#f59e0b;"></i>' : '<i class="fa-solid fa-moon"></i>';
         }
 
-        // Set initial icon on load
-        window.addEventListener('DOMContentLoaded', () => {
-            setThemeIcon(savedTheme);
-        });
+        window.addEventListener('DOMContentLoaded', () => { setThemeIcon(savedTheme); });
 
         // ==========================================
         // STATE & INITIALIZATION
@@ -319,7 +315,7 @@
             }
         });
 
-        // MENGAMBIL DATA WILAYAH DARI GITHUB (Dirombak nested to flat)
+        // BONGKAR JSON WILAYAH DARI GITHUB
         fetch(CONFIG.JSON_URL).then(r => {
             if (!r.ok) throw new Error("JSON tidak ditemukan"); return r.json();
         }).then(data => {
@@ -329,9 +325,7 @@
                 for (const kota in data[prov]) {
                     for (const kec in data[prov][kota]) {
                         for (const desa in data[prov][kota][kec]) {
-                            flatData.push({
-                                provinsi: prov, kota: kota, kecamatan: kec, desa: desa, kodepos: data[prov][kota][kec][desa]
-                            });
+                            flatData.push({ provinsi: prov, kota: kota, kecamatan: kec, desa: desa, kodepos: data[prov][kota][kec][desa] });
                         }
                     }
                 }
@@ -415,9 +409,9 @@
             navigator.clipboard.writeText(hasil).catch(() => {});
             
             const btn = document.getElementById('btn-generate');
-            btn.classList.add('success'); 
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin';
-            setTimeout(() => { btn.classList.remove('success'); btn.innerHTML = '<i class="fa-solid fa-shuffle"></i> Acak Data'; }, 1500);
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Acak Data';
+            setTimeout(() => { btn.innerHTML = originalHtml; }, 1000);
         }
 
         // ==========================================
@@ -447,7 +441,7 @@
                 if(randomCard) {
                     const title = randomCard.title ? randomCard.title.toUpperCase() : "LINK ACAK";
                     el.innerHTML = `
-                        <button class="copy-zone" style="background: ${accent}; color: white; border-right: none;" onclick="copyRandom(event)">
+                        <button class="copy-zone" style="background: ${accent}; color: white; border-right: 2px solid ${accent};" onclick="copyRandom(event, this)">
                             <i class="fa-regular fa-copy"></i>
                         </button>
                         <div class="content-zone" onclick="openRandom()">
@@ -479,15 +473,17 @@
                 let badges = '';
                 if(d.status) badges += `<span class="badge badge-status">${d.status.toUpperCase()}</span>`;
                 if(d.price) badges += `<span class="badge badge-price">${d.price}</span>`;
+                // Default subtitle jika tidak ada badge agar ukuran sama dengan kartu acak
+                if(!badges) badges = `<span style="font-size:10px; opacity:0;">.</span>`;
 
                 el.innerHTML = `
-                    <button class="copy-zone" style="background: ${d.pinnedAt ? 'var(--warning)' : accent}; color: white; border-right: none;" onclick="copyText(event, '${d.url}', this)">
+                    <button class="copy-zone" style="background: ${d.pinnedAt ? 'var(--warning)' : accent}; color: white; border-right: 2px solid ${d.pinnedAt ? 'var(--warning)' : accent};" onclick="copyText(event, '${d.url}', this)">
                         <i class="fa-regular fa-copy"></i>
                     </button>
                     <div class="content-zone" onclick="window.open('${d.url}', '_blank')">
                         <div class="text-info">
                             <div class="card-title">${title}</div>
-                            ${badges ? `<div class="card-subtitle">${badges}</div>` : ''}
+                            <div class="card-subtitle">${badges}</div>
                         </div>
                     </div>
                     <div class="admin-actions" style="display:${isAdmin ? 'flex' : 'none'}; padding-right:12px;">
@@ -505,18 +501,17 @@
         function copyText(e, text, btn) {
             e.stopPropagation();
             navigator.clipboard.writeText(text).catch(()=>{});
-            const oldBg = btn.style.background;
-            btn.style.background = 'var(--success)';
+            const originalHTML = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-            setTimeout(() => { btn.style.background = oldBg; btn.innerHTML = '<i class="fa-regular fa-copy"></i>'; }, 1000);
+            setTimeout(() => { btn.innerHTML = originalHTML; }, 1000);
         }
 
-        function copyRandom(e) {
+        function copyRandom(e, btn) {
             e.stopPropagation();
             const data = dbShopee['ID_RANDOM_LOCKED'];
             if(!data || !data.url) return;
             const links = data.url.split('\n').map(l=>l.trim()).filter(l=>l.startsWith('http'));
-            if(links.length > 0) copyText(e, links[Math.floor(Math.random() * links.length)], e.currentTarget);
+            if(links.length > 0) copyText(e, links[Math.floor(Math.random() * links.length)], btn);
         }
 
         function openRandom() {
