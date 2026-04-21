@@ -240,19 +240,45 @@
             });
         }
 
+       // ==========================================
+        // FETCH DATA WILAYAH (GITHUB) & BONGKAR JSON
         // ==========================================
-        // FETCH DATA WILAYAH (R2) & NAMA (Firebase)
-        // ==========================================
-        fetch(CONFIG.JSON_URL).then(r => r.json()).then(data => {
-            // Hilangkan daerah konflik (Papua)
-            dbWilayah = data.filter(i => !(i.provinsi||"").toUpperCase().includes("PAPUA"));
-        }).catch(e => console.error("R2 Error", e));
-
-        db.ref('used_names').once('value', snap => {
-            if(snap.exists()) snap.forEach(c => { if(c.key !== todayWIB) db.ref('used_names/'+c.key).remove(); });
-        });
-        db.ref('used_names/'+todayWIB).on('value', snap => { dbNames = snap.val() ? Object.values(snap.val()) : []; });
-        db.ref('links').on('value', snap => { dbShopee = snap.val() || {}; renderCards(); });
+        fetch(CONFIG.JSON_URL)
+            .then(r => {
+                if (!r.ok) throw new Error("File JSON tidak ditemukan");
+                return r.json();
+            })
+            .then(data => {
+                let flatData = [];
+                // Membongkar 4 lapisan JSON: Provinsi -> Kota -> Kec -> Desa: Kodepos
+                for (const prov in data) {
+                    // Filter: Hindari wilayah Papua
+                    if (prov.toUpperCase().includes("PAPUA")) continue; 
+                    
+                    for (const kota in data[prov]) {
+                        for (const kec in data[prov][kota]) {
+                            for (const desa in data[prov][kota][kec]) {
+                                flatData.push({
+                                    provinsi: prov,
+                                    kota: kota,
+                                    kecamatan: kec,
+                                    desa: desa,
+                                    kodepos: data[prov][kota][kec][desa]
+                                });
+                            }
+                        }
+                    }
+                }
+                dbWilayah = flatData;
+                console.log("Database wilayah siap! Total:", dbWilayah.length);
+            })
+            .catch(e => {
+                console.error("Gagal memuat kota.json:", e);
+                // Fallback Darurat agar tidak macet
+                dbWilayah = [
+                    { provinsi: "Jawa Timur", kota: "Surabaya", kecamatan: "Krembangan", desa: "Kemayoran", kodepos: "60111" }
+                ];
+            });
 
         // ==========================================
         // AUTHENTICATION LOGIC
